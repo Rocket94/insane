@@ -183,6 +183,7 @@ func (taskList *TaskList) deleteTasks(id string, tp uint32) {
 
 func (taskList *TaskList) TaskListRun() {
 	go func() {
+		//listen task status,put unfinished task to task list
 		for {
 
 			// 没任务休息一会，避免占用CPU
@@ -198,7 +199,7 @@ func (taskList *TaskList) TaskListRun() {
 			}
 		}
 	}()
-
+	//run unfinished task of tasklist
 	for {
 		task := <-taskList.CurTask // 准备执行的任务id
 		task.Run()
@@ -208,7 +209,7 @@ func (taskList *TaskList) TaskListRun() {
 }
 
 func (task *Task) Init() {
-	id := strconv.FormatInt(utils.Now(), 10)
+	id := strconv.FormatInt(utils.Now(), 10)	//name id with curTime
 	task.Request.Id = id
 	task.Request.Report = new(Report)
 	task.Request.initStopCh()

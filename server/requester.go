@@ -77,6 +77,7 @@ func (request *Request) Dispose() {
 	var (
 		wg          sync.WaitGroup // 请求完成
 		wgReceiving sync.WaitGroup // 请求数据统计完成
+		sum int//request send numbers
 	)
 
 	// 统计数据
@@ -90,7 +91,7 @@ func (request *Request) Dispose() {
 		wg.Add(1)
 		switch request.Form {
 		case TYPE_HTTP:
-			go Http(ch, &wg, request)
+			go Http(ch, &wg, request,&sum)
 		case TYPE_WEBSOCKET:
 			go Websocket(ch, &wg, request)
 		default:
@@ -106,6 +107,7 @@ func (request *Request) Dispose() {
 	request.Status = true
 
 	wgReceiving.Wait()
+	fmt.Printf("%d requests send",sum)
 	logger.Debug("dispose out...")
 }
 

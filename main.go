@@ -20,9 +20,11 @@ func main() {
 
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGPIPE)
-
+	//open a task
 	go server.TK.TaskListRun()
+	//configure http server
 	go insane.OnStart()
+	//open listen server
 	go server.InsaneLoad.Start(3)
 	logger.Debug("insane server starting ")
 

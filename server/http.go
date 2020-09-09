@@ -16,10 +16,10 @@ import (
 
 var i int64
 var m sync.Mutex
-
+//timeout
 const HTTP_RESPONSE_TIMEOUT = time.Duration(5) * time.Second
 
-func Http(ch chan<- *Response, wg *sync.WaitGroup, request *Request) {
+func Http(ch chan<- *Response, wg *sync.WaitGroup, request *Request,sum *int) {
 	sentCh := make(chan bool)
 	for {
 		select {
@@ -36,9 +36,12 @@ func Http(ch chan<- *Response, wg *sync.WaitGroup, request *Request) {
 			close(sentCh)
 			wg.Done()
 			return
+			//send request continually
 		default:
 			go httpSend(request.client, request, ch, sentCh)
+			*sum++
 			<-sentCh
+			time.Sleep(time.Second)
 		}
 	}
 }

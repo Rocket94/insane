@@ -107,7 +107,7 @@ func (request *Request) Dispose() {
 	request.Status = true
 
 	wgReceiving.Wait()
-	fmt.Printf("%d requests send",sum)
+	fmt.Printf("FINISH: %d requests send\n",sum)
 	logger.Debug("dispose out...")
 }
 
@@ -257,7 +257,7 @@ func (request *Request) advanceHttp(curlCh chan uint32) {
 				select {
 				case <-t.C:
 					adMutex.Lock()
-					reqNum++
+					 reqNum++
 					if reqNum >= ADVANCE_COUNT {
 						curlCh <- 1
 						logger.Debug("预请求结束...")

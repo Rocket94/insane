@@ -7,7 +7,6 @@ import (
 
 	"insane/general/base/appconfig"
 	"insane/utils"
-	"time"
 )
 
 type Report struct {
@@ -27,9 +26,6 @@ type Report struct {
 
 func (report *Report) ReceivingResults(id string, conCurrency uint64, ch <-chan *Response, wgReceiving *sync.WaitGroup) {
 	defer wgReceiving.Done()
-
-	time.Sleep(30*time.Second)
-
 	// 时间
 	var (
 		maxTime           uint64                 // 最大时长

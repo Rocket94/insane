@@ -19,8 +19,10 @@ var m sync.Mutex
 //timeout
 const HTTP_RESPONSE_TIMEOUT = time.Duration(5) * time.Second
 
-func Http(ch chan<- *Response, wg *sync.WaitGroup, request *Request,sum *int) {
+func Http(ch chan<- *Response, wg *sync.WaitGroup, request *Request, sum *int) {
 	sentCh := make(chan bool)
+	ph := true
+	go preheatingClosure(30, &ph)
 	for {
 		select {
 		case <-request.stop:
@@ -38,15 +40,18 @@ func Http(ch chan<- *Response, wg *sync.WaitGroup, request *Request,sum *int) {
 			return
 			//send request continually
 		default:
-			go httpSend(request.client, request, ch, sentCh)
-			*sum++
+			go httpSend(request.client, request, ch, sentCh, ph)
+		//subtract preheating time
+			if !ph{
+				*sum++
+			}
 			<-sentCh
 			time.Sleep(time.Second)
 		}
 	}
 }
 
-func httpSend(client *http.Client, request *Request, ch chan<- *Response, sentCh chan bool) {
+func httpSend(client *http.Client, request *Request, ch chan<- *Response, sentCh chan bool, preheating bool) {
 	var (
 		status    = false
 		isSuccess = false
@@ -55,6 +60,7 @@ func httpSend(client *http.Client, request *Request, ch chan<- *Response, sentCh
 		start     = utils.Now()
 	)
 	resp := new(Response)
+	//response timeout cl
 	go func() {
 		t := time.NewTicker(HTTP_RESPONSE_TIMEOUT)
 		<-t.C
@@ -69,22 +75,25 @@ func httpSend(client *http.Client, request *Request, ch chan<- *Response, sentCh
 		resp.ErrMsg = err.Error()
 		return
 	}
-
+	//send http request
 	rp, err := client.Do(req)
+
 	if err != nil {
 		resp.ErrCode = constant.ERROR_REQUEST_CONNECTION // 连接失败
 		resp.ErrMsg = err.Error()
 		return
 	}
-
-	isSuccess, errCode, errMsg = verify(rp)
-	end := utils.Now()
-	resp.ErrCode = errCode
-	resp.ErrMsg = errMsg
-	resp.IsSuccess = isSuccess
-	resp.WasteTime = uint64(end - start)
-
-	httpSendRespCh(ch, resp)
+	if !preheating {
+		isSuccess, errCode, errMsg = verify(rp)
+		end := utils.Now()
+		resp.ErrCode = errCode
+		resp.ErrMsg = errMsg
+		resp.IsSuccess = isSuccess
+		resp.WasteTime = uint64(end - start)
+		//put response to channel
+		httpSendRespCh(ch, resp)
+	}
+	//block httpSend
 	httpSendSentCh(sentCh)
 }
 
@@ -192,4 +201,17 @@ func createFormBody(bodyField []*BodyField) string {
 		}
 	}
 	return body.Encode()
+}
+
+func preheatingClosure(preDuration int64, preheating *bool) {
+	// recover一下，避免提前结束任务后,关闭stop导致的panic
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Debug(err)
+		}
+	}()
+
+	t := time.After(30 * time.Second)
+	<-t
+	*preheating = false
 }

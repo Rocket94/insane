@@ -24,7 +24,7 @@ type Task struct {
 	initOnce sync.Once
 	stop     chan int
 }
-
+//give memo to task list
 var TK = &TaskList{
 	CurTask: make(chan *Task),
 }

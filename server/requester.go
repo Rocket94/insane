@@ -76,13 +76,13 @@ func (request *Request) Dispose() {
 
 	var (
 		wg          sync.WaitGroup // 请求完成
-		wgReceiving sync.WaitGroup // 请求数据统计完成
+		//wgReceiving sync.WaitGroup // 请求数据统计完成
 		sum int//request send numbers
 	)
 
 	// 统计数据
-	wgReceiving.Add(1)
-	go request.Report.ReceivingResults(request.Id, request.ConCurrency, ch, &wgReceiving)
+	//wgReceiving.Add(1)
+	//go request.Report.ReceivingResults(request.Id, request.ConCurrency, ch, &wgReceiving)
 
 	// request.duration时间后,结束所有请求
 	go request.timeClosure()
@@ -106,7 +106,7 @@ func (request *Request) Dispose() {
 	close(request.stop)
 	request.Status = true
 
-	wgReceiving.Wait()
+	//wgReceiving.Wait()
 	fmt.Printf("FINISH: %d requests send\n",sum)
 	logger.Debug("dispose out...")
 }

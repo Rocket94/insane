@@ -17,7 +17,7 @@ import (
 var i int64
 var m sync.Mutex
 //timeout
-const HTTP_RESPONSE_TIMEOUT = time.Duration(5) * time.Second
+const HTTP_RESPONSE_TIMEOUT = time.Duration(60) * time.Second
 
 func Http(ch chan<- *Response, wg *sync.WaitGroup, request *Request, sum *int) {
 	sentCh := make(chan bool)
@@ -68,11 +68,12 @@ func httpSend(client *http.Client, request *Request, ch chan<- *Response, sentCh
 			httpSendSentCh(sentCh)
 		}
 	}()
+	req, err := SetRequest(request)
 
-	req, err := getHttpRequest(request)
 	if err != nil {
 		resp.ErrCode = constant.ERROR_REQUEST_CREATED // 创建连接失败
 		resp.ErrMsg = err.Error()
+		logger.Debug("set request failed")
 		return
 	}
 	//send http request
@@ -81,8 +82,10 @@ func httpSend(client *http.Client, request *Request, ch chan<- *Response, sentCh
 	if err != nil {
 		resp.ErrCode = constant.ERROR_REQUEST_CONNECTION // 连接失败
 		resp.ErrMsg = err.Error()
+		logger.Debug("connect failed,no response")
 		return
 	}
+	fmt.Println(rp)
 	if !preheating {
 		isSuccess, errCode, errMsg = verify(rp)
 		end := utils.Now()

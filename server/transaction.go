@@ -46,7 +46,6 @@ type orderstatus struct {
 	Cdid   int    `json:"cdid"`
 	Cid    int    `json:"cid"`
 	Clast  string `json:"clast"`
-	Byname bool   `json:"byname"` //如果byname为true，cid可以设置为任意值，事务中会被重新赋值
 }
 type delivery struct {
 	Wid        int `json:"wid"`
@@ -81,37 +80,40 @@ func CreateBody(TxnType int, r *rand.Rand) io.Reader {
 		wid := utils.GetRandomIntRange(1, 10, r)
 		did := utils.GetRandomIntRange(1, 10, r)
 		cwid, cdid := utils.GetCwdidRandom(r, wid, did)
+		cid, clast := utils.GetCidlastRandom(r, wid, did)
 		body = payment{
 			Wid:     wid,
 			Did:     did,
-			Cwid:    0,
-			Cdid:    0,
-			Cid:     0,
-			Clast:   "",
+			Cwid:    cwid,
+			Cdid:    cdid,
+			Cid:     cid,
+			Clast:   clast,
 			Hamount: float64(utils.GetRandomIntRange(100, 500000, r) / 100),
 			Hdate:   time.Now().Format("2020-09-10 14:25:47"),
 		}
 		break
 	case ORDER_STATUS_rq:
+		wid := utils.GetRandomIntRange(1, 10, r)
+		did := utils.GetRandomIntRange(1, 10, r)
+		cid, clast := utils.GetCidlastRandom(r, wid, did)
 		body = orderstatus{
-			Cwid:   0,
-			Cdid:   0,
-			Cid:    0,
-			Clast:  "",
-			Byname: false,
+			Cwid:   wid,
+			Cdid:   did,
+			Cid:    cid,
+			Clast:  clast,
 		}
 		break
 	case DELIVERY_rq:
 		body = delivery{
-			Wid:        0,
-			Ocarrierid: 0,
+			Wid:        utils.GetRandomIntRange(1, 10, r),
+			Ocarrierid: utils.GetRandomIntRange(1, 10, r),
 		}
 		break
 	case STOCK_LEVEL_rq:
 		body = stocklevel{
-			Wid:       0,
-			Did:       0,
-			Threshold: 0,
+			Wid:       utils.GetRandomIntRange(1, 10, r),
+			Did:       utils.GetRandomIntRange(1, 10, r),
+			Threshold: utils.GetRandomIntRange(10, 20, r),
 		}
 		break
 	default:

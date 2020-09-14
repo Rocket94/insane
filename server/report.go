@@ -15,11 +15,10 @@ type Report struct {
 	MinTime           uint64         `json:"minTime"`           // 最小时长
 	SuccessNum        uint64         `json:"successNum"`        // 成功请求数
 	FailureNum        uint64         `json:"failureNum"`        // 失败请求数
+	NewOrderNum       uint64         `json:"newOrderNum"`       // tpmc
 	ConCurrency       uint64         `json:"conCurrency"`       // 并发数
 	ErrCode           map[int]int    `json:"errCode"`           // 错误码/错误个数
 	ErrCodeMsg        map[int]string `json:"errCodeMsg"`        // 错误码描述
-	AverageSuccessReq map[uint64]int `json:"averageSuccessReq"` // 每个时间段的成功请求数
-	AverageErrorReq   map[uint64]int `json:"averageErrorReq"`   // 每个时间段的错误请求数
 	Status            bool           `json:"status"`
 	m                 sync.Mutex
 }
@@ -32,28 +31,20 @@ func (report *Report) ReceivingResults(id string, conCurrency uint64, ch <-chan 
 		minTime           uint64                 // 最小时长
 		successNum        uint64                 // 成功请求数
 		failureNum        uint64                 // 失败请求数
+		newOrderNum       uint64                 // tpmc
 		errCode           = make(map[int]int)    // 错误码/错误个数
 		errCodeMsg        = make(map[int]string) // 错误码描述
-		averageSuccessReq = make(map[uint64]int) // 每个时间段的成功请求数
-		averageErrorReq   = make(map[uint64]int) // 每个时间段的错误请求数
 	)
 
 	startTime := utils.Now()
 	for data := range ch {
 		report.m.Lock()
-		curSecond := utils.CurSecond(uint64(startTime))
-
-		if _, ok := averageSuccessReq[curSecond]; !ok {
-			averageSuccessReq[curSecond] = 0
-		}
-
-		if _, ok := averageErrorReq[curSecond]; !ok {
-			averageErrorReq[curSecond] = 0
-		}
 
 		if data.IsSuccess {
-			averageSuccessReq[curSecond]++
 			successNum++
+			if data.Transaction == 1 {
+				newOrderNum++
+			}
 			if data.WasteTime > maxTime {
 				maxTime = data.WasteTime
 			}
@@ -69,7 +60,6 @@ func (report *Report) ReceivingResults(id string, conCurrency uint64, ch <-chan 
 					errCodeMsg[data.ErrCode+1] = data.ErrMsg
 				}
 			}
-			averageErrorReq[curSecond]++
 			failureNum++
 		}
 
@@ -77,11 +67,10 @@ func (report *Report) ReceivingResults(id string, conCurrency uint64, ch <-chan 
 		report.MinTime = minTime
 		report.SuccessNum = successNum
 		report.FailureNum = failureNum
+		report.NewOrderNum = newOrderNum
 		report.ConCurrency = conCurrency
 		report.ErrCode = errCode
 		report.ErrCodeMsg = errCodeMsg
-		report.AverageSuccessReq = averageSuccessReq
-		report.AverageErrorReq = averageErrorReq
 
 		report.m.Unlock()
 	}

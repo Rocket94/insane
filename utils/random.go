@@ -28,52 +28,61 @@ func init() {
 }
 
 func GetRandomIntRange(minnum, maxnum int, r *rand.Rand) int {
-	return r.Intn(maxnum-minnum) + minnum
+	return r.Intn(maxnum-minnum+1) + minnum
 }
 func GetCIDRandom(r *rand.Rand) int {
 	return ((r.Intn(1024) | (r.Intn(3000) + 1) + cCustomerID) % 3000) + 1
 }
-func GetOlquantitiesRandom(r *rand.Rand, Olcnt int)[]int{
-	var arr []int
+func GetOlquantitiesRandom(r *rand.Rand, Olcnt int) []int {
+	arr:=make([]int,Olcnt)
 	for i := 0; i < Olcnt; i++ {
-		arr[i]=r.Intn(9)+1
+		arr[i] = r.Intn(10) + 1
 	}
 	return arr
 }
-func GetOliidsRandom(r *rand.Rand, Olcnt int)[]int{
-	var arr []int
+func GetOliidsRandom(r *rand.Rand, Olcnt int) []int {
+	arr:=make([]int,Olcnt)
 	for i := 0; i < Olcnt; i++ {
-		arr[i]=((r.Intn(8190) | (r.Intn(100000) + 1) + cItemID) % 100000) + 1
+		arr[i] = ((r.Intn(8190) | (r.Intn(100000) + 1) + cItemID) % 100000) + 1
 	}
 	return arr
 }
-func GetOlsupplywidsRandom(r *rand.Rand, Olcnt int,wid int)([]int,int){
-	var arr []int
-	alllocal:=1
+func GetOlsupplywidsRandom(r *rand.Rand, Olcnt int, wid int) ([]int, int) {
+	arr:=make([]int,Olcnt)
+	alllocal := 1
 	for i := 0; i < Olcnt; i++ {
-		if r.Intn(99)==0{
-			if wid!=1{
-				arr[i]=wid-1
-			}else {
-				arr[i]=wid+1
+		if r.Intn(100) == 0 {
+			if wid != 1 {
+				arr[i] = wid - 1
+			} else {
+				arr[i] = wid + 1
 			}
 
-			alllocal=0
+			alllocal = 0
 
-		}else {
-			arr[i]=wid
+		} else {
+			arr[i] = wid
 		}
 
 	}
-	return arr,alllocal
+	return arr, alllocal
 }
-func GetCwdidRandom(r *rand.Rand,wid,did int)(int,int){
-	if r.Intn(99)<85{
-		return wid,did
-	}else {
-		if wid==1{
-			return wid+1,r.Intn(9)+1
+func GetCwdidRandom(r *rand.Rand, wid, did int) (int, int) {
+	if r.Intn(100) < 85 {
+		return wid, did
+	} else {
+		if wid == 1 {
+			return wid + 1, r.Intn(10) + 1
+		} else {
+			return wid - 1, r.Intn(10) + 1
 		}
+	}
+}
+func GetCidlastRandom(r *rand.Rand, wid, did int) (int, string) {
+	if r.Intn(100) < 60 {
+		return -12345, GetCLastRandom(r)
+	} else {
+		return GetCIDRandom(r),""
 	}
 }
 func randCLastSyllables(n int) string {

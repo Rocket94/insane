@@ -41,8 +41,8 @@ func Http(ch chan<- *Response, wg *sync.WaitGroup, request *Request, sum *int) {
 			//send request continually
 		default:
 			go httpSend(request.client, request, ch, sentCh, ph)
-		//subtract preheating time
-			if !ph{
+			//subtract preheating time
+			if !ph {
 				*sum++
 			}
 			<-sentCh
@@ -60,7 +60,7 @@ func httpSend(client *http.Client, request *Request, ch chan<- *Response, sentCh
 		start     = utils.Now()
 	)
 	resp := new(Response)
-	//response timeout cl
+	//response timeout cl and re-request
 	go func() {
 		t := time.NewTicker(HTTP_RESPONSE_TIMEOUT)
 		<-t.C
@@ -68,8 +68,8 @@ func httpSend(client *http.Client, request *Request, ch chan<- *Response, sentCh
 			httpSendSentCh(sentCh)
 		}
 	}()
-	req, err := SetRequest(request)
-
+	req, tt, err := SetRequest(request)
+	resp.Transaction = tt
 	if err != nil {
 		resp.ErrCode = constant.ERROR_REQUEST_CREATED // 创建连接失败
 		resp.ErrMsg = err.Error()
